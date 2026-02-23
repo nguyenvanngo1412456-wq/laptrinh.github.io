@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>truyentranhgay 18+</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:white;
+    color:black;
+    transition:0.3s;
+}
+.dark{
+    background:#111;
+    color:white;
+}
+header{
+    background:#e91e63;
+    color:white;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+}
+button{
+    padding:6px 12px;
+    cursor:pointer;
+}
+.container{
+    padding:20px;
+}
+.card{
+    border:1px solid #ccc;
+    padding:15px;
+    margin-bottom:15px;
+}
+.hidden{
+    display:none;
+}
+select,input,textarea{
+    width:100%;
+    margin-bottom:10px;
+    padding:8px;
+}
+.comment-box{
+    margin-top:10px;
+    border-top:1px solid gray;
+    padding-top:10px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h2>truyentranhgay 18+</h2>
+    <div>
+        <button onclick="toggleTheme()">🌙 / ☀️</button>
+        <button onclick="showLogin()">Đăng nhập</button>
+        <button onclick="showUpload()">Đăng tác phẩm</button>
+    </div>
+</header>
+
+<div class="container">
+
+<h3>📚 Phân loại</h3>
+<select id="filterType" onchange="loadPosts()">
+    <option value="all">Tất cả</option>
+    <option value="text">Truyện chữ</option>
+    <option value="comic">Truyện tranh</option>
+    <option value="image">Ảnh tự do</option>
+</select>
+
+<div id="posts"></div>
+
+</div>
+
+<!-- LOGIN -->
+<div id="loginBox" class="container hidden">
+<h3>Đăng nhập</h3>
+<input id="nickname" placeholder="Biệt danh">
+<button onclick="login()">Xác nhận</button>
+</div>
+
+<!-- UPLOAD -->
+<div id="uploadBox" class="container hidden">
+<h3>Đăng tác phẩm</h3>
+
+<select id="type">
+    <option value="text">Truyện chữ</option>
+    <option value="comic">Truyện tranh</option>
+    <option value="image">Ảnh tự do</option>
+</select>
+
+<input id="title" placeholder="Tiêu đề">
+<input id="country" placeholder="Quốc gia">
+<input id="language" placeholder="Ngôn ngữ gốc">
+<input id="genre" placeholder="Thể loại">
+<select id="translated">
+    <option value="Có dịch">Có dịch</option>
+    <option value="Chưa dịch">Chưa dịch</option>
+</select>
+
+<textarea id="content" placeholder="Nội dung hoặc link ảnh"></textarea>
+
+<button onclick="upload()">Đăng</button>
+</div>
+
+<script>
+
+let currentUser = localStorage.getItem("user");
+
+function toggleTheme(){
+    document.body.classList.toggle("dark");
+}
+
+function showLogin(){
+    document.getElementById("loginBox").classList.toggle("hidden");
+}
+
+function showUpload(){
+    if(!currentUser){
+        alert("Bạn phải đăng nhập để đăng tác phẩm!");
+        return;
+    }
+    document.getElementById("uploadBox").classList.toggle("hidden");
+}
+
+function login(){
+    let name = document.getElementById("nickname").value;
+    if(name){
+        localStorage.setItem("user", name);
+        currentUser = name;
+        alert("Đăng nhập thành công với biệt danh: " + name);
+    }
+}
+
+function upload(){
+    let post = {
+        type:document.getElementById("type").value,
+        title:document.getElementById("title").value,
+        country:document.getElementById("country").value,
+        language:document.getElementById("language").value,
+        genre:document.getElementById("genre").value,
+        translated:document.getElementById("translated").value,
+        content:document.getElementById("content").value,
+        author:currentUser,
+        comments:[]
+    };
+
+    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    posts.push(post);
+    localStorage.setItem("posts", JSON.stringify(posts));
+    alert("Đăng thành công!");
+    loadPosts();
+}
+
+function loadPosts(){
+    let filter = document.getElementById("filterType").value;
+    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+    let container = document.getElementById("posts");
+    container.innerHTML = "";
+
+    posts.forEach((p,index)=>{
+        if(filter !== "all" && p.type !== filter) return;
+
+        let div = document.createElement("div");
+        div.className="card";
+        div.innerHTML=`
+            <h3>${p.title}</h3>
+            <p><b>Tác giả:</b> ${p.author}</p>
+            <p><b>Loại:</b> ${p.type}</p>
+            <p><b>Thể loại:</b> ${p.genre}</p>
+            <p><b>Quốc gia:</b> ${p.country}</p>
+            <p><b>Ngôn ngữ:</b> ${p.language}</p>
+            <p><b>Tình trạng dịch:</b> ${p.translated}</p>
+            <hr>
+            <p>${p.content}</p>
+            <div class="comment-box">
+                <h4>Bình luận</h4>
+                ${renderComments(p,index)}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderComments(post,index){
+    let html="";
+    post.comments.forEach(c=>{
+        html += `<p><b>${c.user}:</b> ${c.text} 
+        <button onclick="translateComment('${c.text}')">Dịch</button></p>`;
+    });
+
+    if(currentUser){
+        html += `
+        <input id="comment${index}" placeholder="Viết bình luận">
+        <button onclick="addComment(${index})">Gửi</button>
+        `;
+    } else {
+        html += "<p>Đăng nhập để bình luận</p>";
+    }
+
+    return html;
+}
+
+function addComment(index){
+    let posts = JSON.parse(localStorage.getItem("posts"));
+    let text = document.getElementById("comment"+index).value;
+    posts[index].comments.push({user:currentUser,text:text});
+    localStorage.setItem("posts", JSON.stringify(posts));
+    loadPosts();
+}
+
+function translateComment(text){
+    alert("Giả lập dịch: " + text);
+}
+
+loadPosts();
+
+</script>
+
+</body>
+</html>
